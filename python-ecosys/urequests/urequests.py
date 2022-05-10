@@ -93,11 +93,14 @@ def request(method, url, data=None, json=None, headers={}, stream=None):
             if not l or l == b"\r\n":
                 break
             # print(l)
-            if l.startswith(b"Transfer-Encoding:"):
+            l = l.lower()
+            if l.startswith(b"transfer-encoding:"):
                 if b"chunked" in l:
                     raise ValueError("Unsupported " + l)
-            elif l.startswith(b"Location:") and not 200 <= status <= 299:
-                raise NotImplementedError("Redirects not yet supported")
+            elif l.startswith(b"location:") and not 200 <= status <= 299:
+                newurl = str(l.split(None, 1)[1], "utf-8").strip()
+                s.close()
+                return request(method, newurl, data, json, headers, stream)
     except OSError:
         s.close()
         raise
